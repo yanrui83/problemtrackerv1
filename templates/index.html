@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Problem Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-dt/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Problem Tracker</h2>
+
+        <!-- Problem Form -->
+        <form action="/" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select">
+                    <option>Safety</option>
+                    <option>Quality</option>
+                    <option>Maintenance</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Comment</label>
+                <textarea name="comment" class="form-control"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Progress</label>
+                <select name="progress" class="form-select">
+                    <option>Open</option>
+                    <option>In Progress</option>
+                    <option>Closed</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option>Low</option>
+                    <option selected>Medium</option>
+                    <option>High</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Upload Image</label>
+                <input type="file" name="image" class="form-control">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+
+        <hr>
+
+        <!-- Date Filtering -->
+        <h3>Recorded Issues</h3>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input type="date" id="startDate" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="endDate" class="form-label">End Date</label>
+                <input type="date" id="endDate" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <button id="filterBtn" class="btn btn-primary mt-4">Filter</button>
+            </div>
+        </div>
+
+        <!-- Search Box -->
+        <input type="text" id="searchBox" class="form-control mb-3" placeholder="Search issues...">
+
+        <!-- Problem List Table -->
+        <table class="table table-striped" id="problemTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Image</th>
+                    <th>Comment</th>
+                    <th>Progress</th>
+                    <th>Priority</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for problem in problems %}
+                <tr>
+                    <td>{{ problem[0] }}</td>
+                    <td>{{ problem[1] }}</td>
+                    <td>{{ problem[2] }}</td>
+                    <td>
+                        {% if problem[3] %}
+                            <img src="{{ url_for('static', filename='uploads/' + problem[3]) }}" width="50">
+                        {% else %}
+                            No Image
+                        {% endif %}
+                    </td>
+                    <td>{{ problem[5] if problem[5] else 'No Comment' }}</td>
+                    <td>
+                        <select class="form-select progress-dropdown" data-id="{{ problem[0] }}">
+                            <option value="Open" {% if problem[6] == "Open" %} selected {% endif %}>Open</option>
+                            <option value="In Progress" {% if problem[6] == "In Progress" %} selected {% endif %}>In Progress</option>
+                            <option value="Closed" {% if problem[6] == "Closed" %} selected {% endif %}>Closed</option>
+                        </select>
+                        <span class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
+                    </td>
+                    <td>{{ problem[7] }}</td>
+                    <td>{{ problem[4] }}</td>
+                    <td>
+                        <a href="{{ url_for('edit', id=problem[0]) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{{ url_for('delete', id=problem[0]) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/export" class="btn btn-success">Export to Excel</a>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        $(document).ready(function () {
+            $('#problemTable').DataTable();
+        });
+
+        document.getElementById("searchBox").addEventListener("keyup", function () {
+            let filter = this.value.toLowerCase();
+            let rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                let text = row.innerText.toLowerCase();
+                row.style.display = text.includes(filter) ? "" : "none";
+            });
+        });
+
+        document.getElementById("filterBtn").addEventListener("click", function () {
+            let startDate = new Date(document.getElementById("startDate").value);
+            let endDate = new Date(document.getElementById("endDate").value);
+            let rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                let dateText = row.cells[7].textContent.trim();
+                let rowDate = new Date(dateText);
+
+                if (!isNaN(startDate) && !isNaN(endDate)) {
+                    row.style.display = (rowDate >= startDate && rowDate <= endDate) ? "" : "none";
+                } else {
+                    row.style.display = "";
+                }
+            });
+        });
+
+        document.querySelectorAll(".progress-dropdown").forEach(function (dropdown) {
+            dropdown.addEventListener("change", function () {
+                var issueId = this.getAttribute("data-id");
+                var newProgress = this.value;
+                var spinner = this.nextElementSibling;
+                spinner.style.display = "inline-block";
+
+                fetch(`/update_progress/${issueId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: "progress=" + encodeURIComponent(newProgress)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    spinner.style.display = "none";
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        });
+    </script>
+</body>
+</html>

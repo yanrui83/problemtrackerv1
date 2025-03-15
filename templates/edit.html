@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Issue</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Edit Issue</h2>
+
+        <form action="{{ url_for('update', id=problem[0]) }}" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select">
+                    <option {% if problem[1] == "Safety" %} selected {% endif %}>Safety</option>
+                    <option {% if problem[1] == "Quality" %} selected {% endif %}>Quality</option>
+                    <option {% if problem[1] == "Maintenance" %} selected {% endif %}>Maintenance</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" required>{{ problem[2] }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Current Image</label><br>
+                {% if problem[3] %}
+                    <img src="{{ url_for('static', filename='uploads/' + problem[3]) }}" width="150" class="border rounded mb-2">
+                {% else %}
+                    <p>No Image Uploaded</p>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Upload New Image (Optional)</label>
+                <input type="file" name="image" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Comment</label>
+                <textarea name="comment" class="form-control">{{ problem[5] }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Progress</label>
+                <select name="progress" class="form-select">
+                    <option value="Open" {% if problem[6] == "Open" %} selected {% endif %}>Open</option>
+                    <option value="In Progress" {% if problem[6] == "In Progress" %} selected {% endif %}>In Progress</option>
+                    <option value="Closed" {% if problem[6] == "Closed" %} selected {% endif %}>Closed</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option {% if problem[7] == "Low" %} selected {% endif %}>Low</option>
+                    <option {% if problem[7] == "Medium" %} selected {% endif %}>Medium</option>
+                    <option {% if problem[7] == "High" %} selected {% endif %}>High</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success">Update</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>
+
